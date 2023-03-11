@@ -33,8 +33,11 @@
           - krita
           - jq
           - mtr
+          - filezilla
+          - openvpn
+          - sshpass
 
-    - block:
+      #- block:
       #- name: Verify if Oh-My-zsh is installed
       #  command: test -d /home/{{ ansible_user_id }}/.oh-my-zsh
       #  register: ohmyzsh
@@ -71,20 +74,74 @@
       #  name: awscli
       #  executable: pip3
 
-    - block:
-      - name: Adicionar chave GPG do Sublime Text
-        apt_key:
+    tasks:
+    - name: Adicionar chave GPG do Sublime Text
+      apt_key:
         url: https://download.sublimetext.com/sublimehq-pub.gpg
         state: present
 
-      - name: Adicionar repositório do Sublime Text
-        apt_repository:
+    - name: Adicionar repositório do Sublime Text
+      apt_repository:
         repo: deb https://download.sublimetext.com/ apt/stable/
         state: present
 
-      - name: Instalar o Sublime Text
-        apt:
+    - name: Instalar o Sublime Text
+      apt:
         name: sublime-text
+        state: latest
+
+    - name: Instalar oh-my-bash e powerline
+      become_user: "{{ ansible_user }}"
+      become_method: su
+      shell: sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh)"
+      environment:
+        TERM: xterm-256color
+        USER: "{{ ansible_user }}"
+        HOME: "{{ ansible_env.HOME }}"
+
+    - name: Instalar Notion-enhancer
+      become_user: "{{ ansible_user }}"
+      become_method: su
+      shell: curl -LsS https://raw.githubusercontent.com/notion-enhancer/notion-enhancer/master/install.sh | bash
+
+    - name: Adicionar repositório Edge
+      apt_repository:
+        repo: deb [arch=amd64] https://packages.microsoft.com/repos/edge stable main
+        state: present
+        filename: msedge.list
+        mode: 0644
+
+    - name: Instalar Edge
+      apt:
+        name: microsoft-edge-dev
+        state: latest
+
+    - name: Instalar oc client
+      become_user: "{{ ansible_user }}"
+      become_method: su
+      shell: curl -L https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux.tar.gz -o /tmp/openshift-client-linux.tar.gz && tar -xzf /tmp/openshift-client-linux.tar.gz -C /usr/local/bin/ && rm /tmp/openshift-client-linux.tar.gz
+
+    - name: Instalar kube client
+      become_user: "{{ ansible_user }}"
+      become_method: su
+      shell: curl -L https://dl.k8s.io/release/$(curl -L https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl && chmod +x /usr/local/bin/kubectl
+
+    - name: Instalar Discord
+      apt:
+        name: discord
+        state: latest
+
+    - name: Adicionar repositório AnyDesk
+      apt_repository:
+        repo: deb http://deb.anydesk.com/ all main
+        state: present
+        filename: anydesk.list
+        mode: 0644
+        key_url: https://keys.anydesk.com/repos/DEB-GPG-KEY
+
+    - name: Instalar AnyDesk
+      apt:
+        name: anydesk
         state: latest
       
     - block:
