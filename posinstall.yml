@@ -36,6 +36,7 @@
           - filezilla
           - openvpn
           - sshpass
+          - plank
 
       #- block:
       #- name: Verify if Oh-My-zsh is installed
